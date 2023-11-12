@@ -1,49 +1,58 @@
-import { createContext, PropsWithChildren, ReactNode, useContext, useState } from "react"
+import { createContext, PropsWithChildren, ReactNode, useContext, useEffect, useState } from "react"
 import { Item } from "./types"
 import "react-native-get-random-values"
 import { nanoid } from "nanoid"
 
+import AsyncStorage from "@react-native-async-storage/async-storage"
+
 type State = {
   items: ReadonlyArray<Item>
-  addItem: (item: Omit<Item, "id">) => void
-  removeItem: (item: Item | string) => void
+  addItem: (item: Omit<Item, "id">) => Promise<void>
+  removeItem: (item: Item | string) => Promise<void>
 }
 
 const initialState: State = {
-  items: [
-    {
-      id: "i1",
-      title: "Test 123",
-    },
-    {
-      id: "i2",
-      title: "Test 345",
-    },
-    {
-      id: "i3",
-      title: "Test 678",
-    },
-  ],
-  addItem: (item) => {},
-  removeItem: (item: Item | string) => {},
+  items: [],
+  addItem: (item) => Promise.resolve(),
+  removeItem: (item: Item | string) => Promise.resolve(),
 }
 
 export const ItemsStateContext = createContext<State>(initialState)
 
+const STORAGE_KEY = "expo-todo-app"
+
 export function ItemsStateProvider({ children }: PropsWithChildren): ReactNode {
   const [items, setItems] = useState<ReadonlyArray<Item>>(initialState.items)
 
+  useEffect(() => {
+    ;(async () => {
+      const value = await AsyncStorage.getItem(STORAGE_KEY)
+      if (value) {
+        setItems(JSON.parse(value))
+      }
+    })()
+  }, [])
+
+  const updateItems = async (newItems: ReadonlyArray<Item>) => {
+    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(newItems))
+    setItems(newItems)
+  }
+
   const state: State = {
     items,
-    addItem: (newItem) => {
-      setItems([...items, {
-        id: nanoid(),
-        ...newItem
-      }])
+    addItem: async (newItem) => {
+      await updateItems([
+        ...items,
+        {
+          id: nanoid(),
+          ...newItem,
+        },
+      ])
     },
-    removeItem: (itemOrId) => {
+    removeItem: async (itemOrId) => {
       const id = typeof itemOrId === "string" ? itemOrId : itemOrId.id
-      setItems(items.filter((item) => item.id !== id))
+
+      await updateItems(items.filter((item) => item.id !== id))
     },
   }
 
