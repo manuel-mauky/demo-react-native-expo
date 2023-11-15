@@ -1,8 +1,7 @@
-import { Item } from "../types"
 import { ReactNode } from "react"
 import { Pressable, StyleSheet, Text, View } from "react-native"
 import FontAwesomeIcon from "@expo/vector-icons/FontAwesome"
-import { useItemsState } from "../items-state"
+import { useItemsState, Item} from "../items-state"
 
 type Props = {
   item: Item

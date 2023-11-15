@@ -1,9 +1,13 @@
 import { createContext, PropsWithChildren, ReactNode, useContext, useEffect, useState } from "react"
-import { Item } from "./types"
 import "react-native-get-random-values"
 import { nanoid } from "nanoid"
 
 import AsyncStorage from "@react-native-async-storage/async-storage"
+
+export type Item = {
+  id: string
+  title: string
+}
 
 type State = {
   items: ReadonlyArray<Item>
